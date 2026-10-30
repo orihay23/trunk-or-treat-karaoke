@@ -1,5 +1,5 @@
 // Caches the app shell so it opens with no connection. Bump VERSION after editing any file.
-const VERSION = "karaoke-v1";
+const VERSION = "karaoke-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
