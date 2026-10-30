@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#140a24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karaoke">
+<title>Trunk or Treat Karaoke</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #140a24;
+    --bg2: #241140;
+    --text: #fff7ec;
+    --muted: #cbb8e6;
+    --orange: #ff7a1a;
+    --radius: 28px;
+    --gap: clamp(12px, 2.5vmin, 24px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%) fixed;
+    color: var(--text);
+    font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-user-select: none; user-select: none;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  .screen {
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: max(var(--gap), env(safe-area-inset-top)) max(var(--gap), env(safe-area-inset-right))
+             max(var(--gap), env(safe-area-inset-bottom)) max(var(--gap), env(safe-area-inset-left));
+    gap: var(--gap);
+  }
+  .screen[hidden] { display: none; }
+
+  header.title { text-align: center; }
+  header.title h1 {
+    margin: 0; font-size: clamp(28px, 6vmin, 64px); line-height: 1.05; letter-spacing: .5px;
+    color: var(--orange); text-shadow: 0 0 24px rgba(255,122,26,.45);
+  }
+  header.title p { margin: 4px 0 0; color: var(--muted); font-size: clamp(15px, 2.4vmin, 22px); }
+
+  /* Home: 4 big tiles */
+  .tiles {
+    flex: 1;
+    display: grid; gap: var(--gap);
+    grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  }
+  @media (max-aspect-ratio: 3/4) and (max-width: 520px) {
+    .tiles { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+  }
+  .tile {
+    position: relative; overflow: hidden;
+    border: 0; border-radius: var(--radius);
+    color: #fff; font: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1vmin;
+    padding: 16px; min-height: 120px;
+    background: var(--tile-bg);
+    box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 -6px 0 rgba(0,0,0,.2);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .tile:active { transform: scale(.96); filter: brightness(1.15); }
+  .tile .emoji { font-size: clamp(48px, 13vmin, 140px); line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
+  .tile .name { font-size: clamp(24px, 5.5vmin, 60px); font-weight: 800; text-align: center; line-height: 1.05; text-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .tile .count { font-size: clamp(14px, 2.2vmin, 22px); opacity: .9; }
+  .tile:focus-visible, .song:focus-visible, .back:focus-visible { outline: 5px solid #fff; outline-offset: 4px; }
+
+  /* Category page */
+  .topbar { display: flex; align-items: center; gap: var(--gap); }
+  .back {
+    flex: none; min-width: 72px; height: 72px; padding: 0 22px;
+    border: 0; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,.14); color: var(--text);
+    font: inherit; font-size: 24px; font-weight: 700;
+  }
+  .back:active { transform: scale(.94); background: rgba(255,255,255,.25); }
+  .topbar h2 { margin: 0; font-size: clamp(28px, 6vmin, 56px); display: flex; align-items: center; gap: 12px; }
+
+  .songs {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: var(--gap);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  }
+  .song {
+    display: flex; align-items: center; gap: 18px;
+    min-height: 96px; padding: 16px 22px;
+    border-radius: 22px; text-decoration: none; color: #fff;
+    background: var(--tile-bg);
+    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 -4px 0 rgba(0,0,0,.18);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .song:active { transform: scale(.97); filter: brightness(1.15); }
+  .song .num {
+    flex: none; width: 52px; height: 52px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(0,0,0,.25); font-size: 24px; font-weight: 800;
+  }
+  .song .info { flex: 1; min-width: 0; }
+  .song .t { font-size: clamp(22px, 3.4vmin, 32px); font-weight: 800; line-height: 1.1; }
+  .song .a { font-size: clamp(15px, 2.2vmin, 20px); opacity: .9; margin-top: 4px; }
+  .song .play { flex: none; font-size: 34px; }
+
+  .net {
+    text-align: center; color: var(--muted); font-size: 16px; padding: 4px;
+  }
+  .net.off { color: #ffd166; }
+
+  [data-cat="bts"]     { --tile-bg: linear-gradient(145deg, #8b5cf6, #5b21b6); }
+  [data-cat="kdh"]     { --tile-bg: linear-gradient(145deg, #ec4899, #9d174d); }
+  [data-cat="classic"] { --tile-bg: linear-gradient(145deg, #ff8a1f, #c2410c); }
+  [data-cat="kids"]    { --tile-bg: linear-gradient(145deg, #22c55e, #15803d); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<main id="home" class="screen">
+  <header class="title">
+    <h1>🎃 Trunk or Treat Karaoke 🎤</h1>
+    <p>Tap a category to pick your song!</p>
+  </header>
+  <nav class="tiles" id="tiles" aria-label="Song categories"></nav>
+  <div class="net" id="net-home" aria-live="polite"></div>
+</main>
+
+<main id="list" class="screen" hidden>
+  <div class="topbar">
+    <button class="back" id="back" aria-label="Back to categories">← Back</button>
+    <h2 id="list-title"></h2>
+  </div>
+  <ul class="songs" id="songs"></ul>
+  <div class="net" id="net-list" aria-live="polite"></div>
+</main>
+
+<script>
+/*
+ * Each song links to a YouTube search for "<title> <artist> karaoke", which
+ * always resolves even if a specific upload gets taken down. To pin a song to
+ * one exact video instead, add  id: "VIDEO_ID"  (the part after watch?v=).
+ */
+const CATEGORIES = [
+  {
+    key: "bts", name: "BTS", emoji: "💜",
+    songs: [
+      { t: "Dynamite", a: "BTS" },
+      { t: "Butter", a: "BTS" },
+      { t: "Permission to Dance", a: "BTS" },
+      { t: "Boy With Luv", a: "BTS ft. Halsey" },
+      { t: "Life Goes On", a: "BTS" },
+      { t: "IDOL", a: "BTS" },
+      { t: "DNA", a: "BTS" },
+      { t: "Fake Love", a: "BTS" },
+      { t: "Mic Drop", a: "BTS" },
+      { t: "Spring Day", a: "BTS" },
+    ],
+  },
+  {
+    key: "kdh", name: "KPop Demon Hunters", emoji: "⚔️",
+    songs: [
+      { t: "Golden", a: "HUNTR/X" },
+      { t: "How It's Done", a: "HUNTR/X" },
+      { t: "Soda Pop", a: "Saja Boys" },
+      { t: "Your Idol", a: "Saja Boys" },
+      { t: "Takedown", a: "HUNTR/X" },
+      { t: "What It Sounds Like", a: "HUNTR/X" },
+      { t: "Free", a: "Rumi & Jinu" },
+      { t: "Strategy", a: "TWICE" },
+      { t: "Takedown (TWICE Version)", a: "TWICE", q: "Takedown TWICE KPop Demon Hunters" },
+      { t: "Love, Maybe", a: "MeloMance", q: "Love Maybe MeloMance KPop Demon Hunters" },
+    ],
+  },
+  {
+    key: "classic", name: "Classics", emoji: "🪩",
+    songs: [
+      { t: "Thriller", a: "Michael Jackson" },
+      { t: "Monster Mash", a: "Bobby \"Boris\" Pickett" },
+      { t: "Ghostbusters", a: "Ray Parker Jr." },
+      { t: "Time Warp", a: "Rocky Horror" },
+      { t: "Don't Stop Believin'", a: "Journey" },
+      { t: "Sweet Caroline", a: "Neil Diamond" },
+      { t: "Dancing Queen", a: "ABBA" },
+      { t: "Livin' on a Prayer", a: "Bon Jovi" },
+      { t: "Bohemian Rhapsody", a: "Queen" },
+      { t: "I Want It That Way", a: "Backstreet Boys" },
+    ],
+  },
+  {
+    key: "kids", name: "Kid Favorites", emoji: "🧸",
+    songs: [
+      { t: "Let It Go", a: "Frozen" },
+      { t: "This Is Halloween", a: "Nightmare Before Christmas" },
+      { t: "We Don't Talk About Bruno", a: "Encanto" },
+      { t: "Surface Pressure", a: "Encanto" },
+      { t: "How Far I'll Go", a: "Moana" },
+      { t: "You're Welcome", a: "Moana" },
+      { t: "Under the Sea", a: "The Little Mermaid" },
+      { t: "Hakuna Matata", a: "The Lion King" },
+      { t: "Into the Unknown", a: "Frozen 2" },
+      { t: "Spooky Scary Skeletons", a: "Andrew Gold" },
+    ],
+  },
+];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function songUrl(s) {
+  if (s.id) return "https://www.youtube.com/watch?v=" + encodeURIComponent(s.id);
+  const q = (s.q || `${s.t} ${s.a}`) + " karaoke";
+  return "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+}
+
+$("tiles").innerHTML = CATEGORIES.map((c) => `
+  <button class="tile" data-cat="${c.key}" onclick="location.hash='${c.key}'">
+    <span class="emoji" aria-hidden="true">${c.emoji}</span>
+    <span class="name">${esc(c.name)}</span>
+    <span class="count">${c.songs.length} songs</span>
+  </button>`).join("");
+
+function render() {
+  const cat = CATEGORIES.find((c) => c.key === location.hash.slice(1));
+  $("home").hidden = !!cat;
+  $("list").hidden = !cat;
+  if (!cat) return;
+  $("list").dataset.cat = cat.key;
+  $("list-title").innerHTML = `<span aria-hidden="true">${cat.emoji}</span> ${esc(cat.name)}`;
+  $("songs").innerHTML = cat.songs.map((s, i) => `
+    <li><a class="song" href="${songUrl(s)}" target="_blank" rel="noopener">
+      <span class="num">${i + 1}</span>
+      <span class="info"><div class="t">${esc(s.t)}</div><div class="a">${esc(s.a)}</div></span>
+      <span class="play" aria-hidden="true">▶️</span>
+    </a></li>`).join("");
+  window.scrollTo(0, 0);
+}
+
+$("back").onclick = () => {
+  if (history.length > 1 && location.hash) history.back();
+  else location.hash = "";
+};
+addEventListener("hashchange", render);
+render();
+
+function updateNet() {
+  const msg = navigator.onLine ? "" : "📴 You're offline — songs need Wi-Fi or data to play on YouTube.";
+  for (const id of ["net-home", "net-list"]) {
+    $(id).textContent = msg;
+    $(id).classList.toggle("off", !navigator.onLine);
+  }
+}
+addEventListener("online", updateNet);
+addEventListener("offline", updateNet);
+updateNet();
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
