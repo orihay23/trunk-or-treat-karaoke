@@ -2,7 +2,7 @@
 
 A touch-friendly, offline-capable web app for trunk-or-treat karaoke. Four big
 tiles — **BTS**, **KPop Demon Hunters**, **Classics**, **Kid Favorites** — each
-open a list of 10 songs that jump to YouTube karaoke videos.
+open a list of songs that jump to YouTube karaoke videos.
 
 ## Use it
 Hosted with GitHub Pages: https://orihay23.github.io/trunk-or-treat-karaoke/
