@@ -17,8 +17,8 @@ Songs live in the `CATEGORIES` list near the top of the script in
 `<title> <artist> karaoke`; add `id: "VIDEO_ID"` to a song to link one exact
 video instead.
 
-After editing any file, bump `VERSION` in `sw.js` so installed copies pick up
-the change.
+Changes reach installed copies automatically the next time they open online
+(the app checks the network first and only uses its saved copy offline).
 
 ## Run locally
 ```sh

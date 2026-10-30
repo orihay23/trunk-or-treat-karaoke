@@ -264,7 +264,11 @@ addEventListener("offline", updateNet);
 updateNet();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("sw.js");
+  // When an update takes over an already-open app, reload once to show it.
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener("controllerchange", () => location.reload(), { once: true });
+  }
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
 }
 </script>
 </body>
